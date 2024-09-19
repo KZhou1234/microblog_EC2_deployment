@@ -1,25 +1,25 @@
-# Kura Labs Cohort 5- Deployment Workload 3
+# CI/CD
 
 
 ---
 
 
 
-## Monitoring Application and Server Resources
+## Purpose
 
-Welcome to Deployment Workload 3! The past 2 Workloads have utilized AWS managed services to provision the infrastructure for our application.  Let's start shifting to infrastucture built by us and take a deeper dive into what goes into deploying an application.
+The goal of this practice is to practice to use AWS EC2, GitHub, Jenkins, Promethus and Grafana to implement CI/CD.
 
-Be sure to document each step in the process and explain WHY each step is important to the pipeline.
+## System Diagram
 
-## Instructions
+## Steps
 
-1. Clone this repo to your GitHub account. IMPORTANT: Make sure that the repository name is "microblog_EC2_deployment"
+1. Clone this repo to the GitHub account. IMPORTANT: Make sure that the repository name is "microblog_EC2_deployment". GitHub is used for version control. Jenkins will get the latest version of cade from GitHub to deploy.
 
-2. Create an Ubuntu EC2 instance (t3.micro) named "Jenkins" and install Jenkins onto it (are you still doing this manually?).  Be sure to configure the security group to allow for SSH and HTTP traffic in addition to the ports required for Jenkins and any other services needed (Security Groups can always be modified afterward)
+2. Install and run Jenkins on AWS EC2 allows full control over the environment. The security group for this instance should be configured to open port 22 to allow SSH traffic, port 443 for HTTP traffic and port 8080 for Jenkins. 
 
-3. Configure the server by installing 'python3.9',  'python3.9-venv', 'python3-pip', and 'nginx'. (Hint: There are several ways to install a previous python version. One method was used in Workloads 1 and 2)
+3. Configure the server by installing 'python3.9',  'python3.9-venv', 'python3-pip', and 'nginx'. By creating and ruuning an virtual environment, it can isolate dependencies and avoid conflics for projects.
 
-4. Clone your GH repository to the server, cd into the directory, create and activate a python virtual environment with: 
+4. Clone the GH repository to the server, cd into the directory, create and activate a python virtual environment with: 
 
 ```
 $python3.9 -m venv venv
@@ -36,7 +36,7 @@ $pip install gunicorn pymysql cryptography
 6. Set the ENVIRONMENTAL Variable:
 
 ```
-FLASK_APP=microblog.py
+export FLASK_APP=microblog.py
 ```
 Question: What is this command doing?
 
@@ -56,20 +56,37 @@ proxy_set_header Host $host;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }
 ```
-Question: What is this config file/NginX responsible for?
+### Question 1: What is this config file/NginX responsible for?  
+
+A: The above code block is to set up the Nginx as the reverse proxy server. The configuration forward traffic from public internet to the local host port 5000 where the application server running.
 
 9. Run the following command and then put the servers public IP address into the browser address bar
 
 ```
 gunicorn -b :5000 -w 4 microblog:app
 ```
-Question: What is this command doing? You should be able to see the application running in the browser but what is happening "behind the scenes" when the IP address is put into the browser address bar?
+### Question 2: What is this command doing? You should be able to see the application running in the browser but what is happening "behind the scenes" when the IP address is put into the browser address bar?  
+A: The command above will run the application manually. Go to the public IP address of Jenkins server which hosts the application, I got the login page, meanning that the application is running. That is because we use the cammand `-b` to bind port 5000 allowing port 5000 to listen to any traffic go to the IP. `-w` specifies the number of workers worked independently process requests to port 5000, by doing this the performance can be improved.  
+The Last part `microblog:app` is telling the Gunicorn which is the reverse proxy server which application should run.
+img here
+
 
 10. If all of the above works, stop the application by pressing ctrl+c.  Now it's time to automate the pipeline.  Modify the Jenkinsfile and fill in the commands for the build and deploy stages.
 
-  a. The build stage should include all of the commands required to prepare the environment for the application.  This includes creating the virtual environment and installing all the dependencies, setting variables, and setting up the databases.
+  a. The build stage contains all steps of creating vertual environment, activating venv, installing and updating dependencies and configuring FLASK_APP (environment vsriable) to be the Flask application in our workload which is microblog.py.  
+  
 
-  b. The test stage will run pytest.  Create a python script called test_app.py to run a unit test of the application source code. IMPORTANT: Put the script in a directory called "tests/unit/" of the GitHub repository. Note: The complexity of the script is up to you.  Work within your limits.  (Hint: If you don't know where to start, try testing the homepage or log in page.  Want to challenge yourself with something more complicated? Sky's the limit!)
+  b. The test stage will run pytest.  Create a python script called test_app.py to run a unit test of the application source code. IMPORTANT: Put the script in a directory called "tests/unit/" of the GitHub repository. 
+
+  ```
+import pytest
+from app import create_app
+
+@pytest.fixture()
+  ```
+  First two lines of code import the requred modules will be used in the unit test. The last line of code anotates the fixture in pytest, which allows the following pieces of code to be resuable.  
+  In my used test script, first create an instance of Flask application and enable the `Testing` mode. Then create an client by calling `app.test_client()`. Last step is test a route in main page. Assert an client to send a HTTP GET request to the server, check the reponse `response = client.get('/explore')`. Since we can not access the main page without login; therefore we expected to get a `Status code 302` to redirect.
+
 
   c. The deploy stage will run the commands required to deploy the application so that it is available to the internet. 
 
@@ -77,33 +94,32 @@ Question: What is this command doing? You should be able to see the application 
   
 11. In Jenkins, install the "OWASP Dependency-Check" plug-in
 
-    a. Navigate to "Manage Jenkins" > "Plugins" > "Available plugins" > Search and install
+### Question 3: What is this plugin for?  What is it doing?  When does it do it?  Why is it important?
+OWASP Dependency-Check is a security and risk audit tool to analyze the dependencies and identify the vulnerabilities.  
+In the Jenkinsfile we can see that the `SCAN` stage is after the test stage. It's usually run after dependnecies resolved, before the deploy stage, ensure known vulnerabilities can be detected deployment.
 
- 	b. Then configure it by navigating to "Manage Jenkins" > "Tools" > "Add Dependency-Check > Name: "DP-Check" > check "install automatically" > Add Installer: "Install from github.com"
-
-Question: What is this plugin for?  What is it doing?  When does it do it?  Why is it important?
 
 12. Create a MultiBranch Pipeline and run the build.  IMPORTANT: Make sure the name of the pipeline is: "workload_3".
 
-    Note: Did the pipeline complete? Is the application running?
+      `Daemon process` allows the process run in backgroud that allows Jenkins move to other stages without blocking.
 
-    Hint: if the pipeline stage is unable to complete because the process is running, perhaps the process should be run in the BACKGROUND (daemon).
-    
-    Hint pt 2: NOW does the pipeline complete? Is the application running?  If not: What happened to that RUNNING PROCESS after the deploy STAGE COMPLETES? (stayAlive)
+14. After the application has successfully deployed, create another EC2 (t3.micro) called "Monitoring".  Install Prometheus and Grafana and configure it to monitor the activity on the server running the application.  
+  Grafana and Prometheus are two monitoring tools. In order to monitor the Jenkins (application) server in this workload, we installed `Node Exporter` on the applicaiton server that collect metrics on port 9100.   
+  Then installed Prometheus in Monitoring server to retrive the data from `Node Expoter` By configuring the `.yml` file.  
+  At the meantime, install and start the Grafana on the Monitoring server, which can help use to visualize the data retrived from Permetheus.  
 
-14. After the application has successfully deployed, create another EC2 (t3.micro) called "Monitoring".  Install Prometheus and Grafana and configure it to monitor the activity on the server running the application. 
+  Following are the data collected from Jenkins Server. The monitoring step will help us to better understand the performance of the application, resource. Allow engineers act fast if there's any abnormal activities.
 
-15. Document! All projects have documentation so that others can read and understand what was done and how it was done. Create a README.md file in your repository that describes:
 
-	  a. The "PURPOSE" of the Workload,
+## ISSUES/TROUBLESHOOTING
 
-  	b. The "STEPS" taken (and why each was necessary/important),
-      Question: Were steps 4-9 absolutely necessary for the CICD pipeline? Why or why not?
-    
-  	c. A "SYSTEM DESIGN DIAGRAM" that is created in draw.io (IMPORTANT: Save the diagram as "Diagram.jpg" and upload it to the root directory of the GitHub repo.),
+1. Permission denied issue in building stage.  
+  While push updated files to GitHub repository, I've push created `venv` to GieHub. That will cause while Jenkins run the command, it will first check and use all the code on GitHub, but the path of the virtual environment now does not match the path in Jenkinsfile. This has been solved by remove the venv in the GithHub.  
 
-	  d. "ISSUES/TROUBLESHOOTING" that may have occured,
+2. Password not found issue.
+  For the deploy stage, we have used `sudo` command to have the root permission, which cannot get through the deploy stage. To solve this problem, edit the `visudo` to give the permission to Jenkins.
 
-  	e. An "OPTIMIZATION" section for that answers the question: What are the advantages of provisioning ones own resources over using a managed service like Elastic Beanstalk?  Could the infrastructure created in this workload be considered that of a "good system"?  Why or why not?  How would you optimize this infrastructure to address these issues?
 
-    f. A "CONCLUSION" statement as well as any other sections you feel like you want to include.
+## CONCLUSION
+
+In this workload, we have practice more about using Jenkins to implement fully CI/CD.
