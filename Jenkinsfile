@@ -18,6 +18,7 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 source venv/bin/activate
+                export PYTHONPATH=$(pwd)
                 py.test ./tests/unit/ --verbose --junit-xml test-reports/results.xml
                 '''
             }
