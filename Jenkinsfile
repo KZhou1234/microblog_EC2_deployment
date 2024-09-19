@@ -49,7 +49,7 @@ pipeline {
       stage ('Deploy') {
             steps {
                 sh '''#!/bin/bash
-                <enter your code here>
+                sudo systemctl restart microblog
                 '''
             }
         }
