@@ -12,8 +12,8 @@ The goal of this practice is to practice to use AWS EC2, GitHub, Jenkins, Promet
 ## System Diagram
 <div align="center">
   <img width="625" alt="image" src="https://github.com/user-attachments/assets/40c27426-acd4-4e5e-b5f7-4c234707eadd">
-
 </div>
+
 ## Steps
 
 1. Clone this repo to the GitHub account. IMPORTANT: Make sure that the repository name is "microblog_EC2_deployment". GitHub is used for version control. Jenkins will get the latest version of cade from GitHub to deploy.
