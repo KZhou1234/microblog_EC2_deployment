@@ -1,4 +1,4 @@
-# CI/CD
+# Microblog CI/CD Pipeline 
 
 
 ---
@@ -7,10 +7,13 @@
 
 ## Purpose
 
-The goal of this practice is to practice to use AWS EC2, GitHub, Jenkins, Promethus and Grafana to implement CI/CD.
+The goal of this practice is to practice to use AWS EC2, GitHub, Jenkins, Promethus and Grafana to implement CI/CD. 
 
 ## System Diagram
+<div align="center">
+  <img width="625" alt="image" src="https://github.com/user-attachments/assets/40c27426-acd4-4e5e-b5f7-4c234707eadd">
 
+</div>
 ## Steps
 
 1. Clone this repo to the GitHub account. IMPORTANT: Make sure that the repository name is "microblog_EC2_deployment". GitHub is used for version control. Jenkins will get the latest version of cade from GitHub to deploy.
@@ -68,7 +71,10 @@ gunicorn -b :5000 -w 4 microblog:app
 ### Question 2: What is this command doing? You should be able to see the application running in the browser but what is happening "behind the scenes" when the IP address is put into the browser address bar?  
 A: The command above will run the application manually. Go to the public IP address of Jenkins server which hosts the application, I got the login page, meanning that the application is running. That is because we use the cammand `-b` to bind port 5000 allowing port 5000 to listen to any traffic go to the IP. `-w` specifies the number of workers worked independently process requests to port 5000, by doing this the performance can be improved.  
 The Last part `microblog:app` is telling the Gunicorn which is the reverse proxy server which application should run.
-img here
+<div align="center>
+<img width="1439" alt="image" src="https://github.com/user-attachments/assets/ece6a554-6d93-4220-a489-a7314d34ad72">
+
+</div>
 
 
 10. If all of the above works, stop the application by pressing ctrl+c.  Now it's time to automate the pipeline.  Modify the Jenkinsfile and fill in the commands for the build and deploy stages.
@@ -102,24 +108,47 @@ In the Jenkinsfile we can see that the `SCAN` stage is after the test stage. It'
 12. Create a MultiBranch Pipeline and run the build.  IMPORTANT: Make sure the name of the pipeline is: "workload_3".
 
       `Daemon process` allows the process run in backgroud that allows Jenkins move to other stages without blocking.
+    <div align="center">
+      <img width="911" alt="image" src="https://github.com/user-attachments/assets/8eec9bed-1d93-4a2b-9754-173236755e7f">
+
+    </div>
 
 14. After the application has successfully deployed, create another EC2 (t3.micro) called "Monitoring".  Install Prometheus and Grafana and configure it to monitor the activity on the server running the application.  
   Grafana and Prometheus are two monitoring tools. In order to monitor the Jenkins (application) server in this workload, we installed `Node Exporter` on the applicaiton server that collect metrics on port 9100.   
   Then installed Prometheus in Monitoring server to retrive the data from `Node Expoter` By configuring the `.yml` file.  
   At the meantime, install and start the Grafana on the Monitoring server, which can help use to visualize the data retrived from Permetheus.  
+<div align="center">
+<img width="851" alt="image" src="https://github.com/user-attachments/assets/3932813e-777f-473d-8fea-4c3798054997">
 
+</div>
+  
   Following are the data collected from Jenkins Server. The monitoring step will help us to better understand the performance of the application, resource. Allow engineers act fast if there's any abnormal activities.
+<div align="center">
+  <img width="963" alt="image" src="https://github.com/user-attachments/assets/b205cf4f-0cca-4072-83fd-095ff2347317">
+  <img width="968" alt="image" src="https://github.com/user-attachments/assets/93f916dd-2c4d-46a3-9873-84d61cf79a92">
+  <img width="1022" alt="image" src="https://github.com/user-attachments/assets/1565df34-4ec4-46bd-b49b-e30801c93b08">
 
+
+</div>
 
 ## ISSUES/TROUBLESHOOTING
 
-1. Permission denied issue in building stage.  
+1. Permission denied issue in building stage.
+ <div align="center">
+ <img width="1142" alt="image" src="https://github.com/user-attachments/assets/c44e7a11-0e56-4e8c-80d0-5d925c9af9b2">
+ 
+</div>
   While push updated files to GitHub repository, I've push created `venv` to GieHub. That will cause while Jenkins run the command, it will first check and use all the code on GitHub, but the path of the virtual environment now does not match the path in Jenkinsfile. This has been solved by remove the venv in the GithHub.  
 
 2. Password not found issue.
+ <div align="center">
+<img width="1133" alt="image" src="https://github.com/user-attachments/assets/36da2e5b-27f3-4f32-b67f-8786db43d702">
+  
+</div>
   For the deploy stage, we have used `sudo` command to have the root permission, which cannot get through the deploy stage. To solve this problem, edit the `visudo` to give the permission to Jenkins.
 
 
 ## CONCLUSION
 
-In this workload, we have practice more about using Jenkins to implement fully CI/CD.
+In this workload, we have practice more about using Jenkins to implement fully CI/CD. There are five stages added to Jenkinsfile, they are "build, test, OWASP FS SCAN, clean, deploy". Each stage plays an important role in the CI/CD pipeline. "Build" stage is to automatically retrive and build the updated program. "Test" is important before the product getting deployed. "Clean" stage improves the performance by adding more independent workers, and "Scan" stage improves the security fot the product. Finally, using Jenkins can implement continous deployment. 
+Then in this workload, we've also use another server to provide monitoring functionality to ensure that the performance of application server is understandable. Denpends on the data collected from application server such as resources utilization or application data, engineers take corresponding actions.
