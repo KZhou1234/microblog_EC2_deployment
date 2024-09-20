@@ -11,7 +11,8 @@ The goal of this practice is to practice to use AWS EC2, GitHub, Jenkins, Promet
 
 ## System Diagram
 <div align="center">
-  <img width="625" alt="image" src="https://github.com/user-attachments/assets/40c27426-acd4-4e5e-b5f7-4c234707eadd">
+  <img width="508" alt="image" src="https://github.com/user-attachments/assets/694d64b1-0db5-40fc-8364-b66af69a0a21">
+
 </div>
 
 ## Steps
